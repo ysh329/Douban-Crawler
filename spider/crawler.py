@@ -21,6 +21,7 @@ import urllib2
 from bs4 import BeautifulSoup
 import re
 import time
+import math
 
 
 ################################### PART2 CLASS && FUNCTION ###########################
@@ -80,47 +81,71 @@ def filterBasicInfoList(basicInfoList):
     return basicInfoList
 
 # 查找指定关键词的前topNGroup个群组的信息[组名、地址、人数、介绍]
-def getGroupsInfoList(queryKeywordsList, topNGroup=10, findGroupUrl="https://www.douban.com/group/search?cat=1019&q=[REPLACEBYQUERY]&sort=relevance", maxGroupsNumForEachPage=20):
-    # 获取查询结果地址
-    queryString = "+".join(queryKeywordsList)
-    queryUrl = findGroupUrl.replace("[REPLACEBYQUERY]", queryString)
-    logging.info("queryUrl:{0}".format(queryUrl))
+def getGroupsInfoList(queryKeywordsList, topNGroup=10, findGroupUrl="https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance", maxGroupsNumForEachPage=20):
 
-    # 发送访问请求和接收
-    try:
-        request = urllib2.Request(queryUrl)
-        response = urllib2.urlopen(request)
-    except urllib2.HTTPError, e:
-        logging.error("HTTPError code:{0}, URL:{1}".format(e.code, queryUrl))
-    except Exception, e:
-        logging.error(e)
+    # 根据需要的小组数目计算小组信息的目录页
+    def getGroupCategoryUrlList(queryKeywordsList, topNGroup=10, findGroupUrl="https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance", maxGroupsNumForEachPage=20):
+        # 获取查询结果地址
+        queryString = "+".join(queryKeywordsList)
+        queryUrl = findGroupUrl.replace("[REPLACEBYQUERY]", queryString)
+        logging.info("queryUrl:{0}".format(queryUrl))
 
-    # 读取响应内容并转换为soup对象
-    html = response.read()
-    soup = BeautifulSoup(html, "lxml")
+        # 发送访问请求和接收
+        try:
+            request = urllib2.Request(queryUrl)
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError, e:
+            logging.error("HTTPError code:{0}, URL:{1}".format(e.code, queryUrl))
+        except Exception, e:
+            logging.error(e)
+
+        # 读取响应内容并转换为soup对象
+        html = response.read()
+        soup = BeautifulSoup(html, "lxml")
+
+        countPlain = soup.find("span", attrs={"class":"count"}).string
+        countNum = int(re.findall('[0-9]\d', countPlain)[0])
+        maxPageNum = int(math.ceil(float(countNum)/maxGroupsNumForEachPage))
+        pageStartGroupIdxList = map(lambda pageIdx: str(pageIdx*10), xrange(maxPageNum))
+        groupCategoryUrlList = map(lambda start: findGroupUrl.replace("start=0", "start="+start), pageStartGroupIdxList)
+        if topNGroup < len(groupCategoryUrlList)*maxGroupsNumForEachPage:
+            groupCategoryUrlList = groupCategoryUrlList[:topNGroup/maxGroupsNumForEachPage+1]
+        return groupCategoryUrlList
+
 
     # 取出关键标签部分
-    #print soup.find("div", id="wrapper").find("div", id="content")
-    resultOfSoup = soup.find_all("div", attrs={'class':"result"})
+    def getGroupInfoListForEachPage(groupCategoryUrl):
+        # 发送访问请求和接收
+        try:
+            request = urllib2.Request(groupCategoryUrl)
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError, e:
+            logging.error("HTTPError code:{0}, URL:{1}".format(e.code, queryUrl))
+        except Exception, e:
+            logging.error(e)
 
-    # 遍历抽取重要信息[组名、链接、人数、介绍]
-    groupInfoList = []
-    # for resultIdx in xrange(len(resultOfSoup)):
-    #     try:
-    #         result = resultOfSoup[resultIdx]
-    #         groupName = "".join(list(result.find("div", attrs={'class':"title"}).strings)).strip()
-    #         groupHref = result.a.get("href")
-    #         groupMemberPlain = result.find("div", attrs={'class':"info"}).string
-    #         groupMemberNum = int(re.findall('^[0-9]\d*', groupMemberPlain))
-    #         groupIntro = result.p.string.strip().replace(" ", "").replace("", "")
-    #         groupInfoList.append(groupName, groupHref, groupMemberNum, groupIntro)
-    #     except Exception, e:
-    #         logging.error(e)
-    # return groupInfoList
-    countPlain = soup.find("span", attrs={"class":"count"}).string
-    countNum = int(re.findall('[0-9]\d', countPlain)[0])
-    import math
-    print countNum, math.ceil(float(countNum)/maxGroupsNumForEachPage)
+        # 读取响应内容并转换为soup对象
+        html = response.read()
+        soup = BeautifulSoup(html, "lxml")
+
+        #print soup.find("div", id="wrapper").find("div", id="content")
+        resultOfSoup = soup.find_all("div", attrs={'class':"result"})
+
+        # 遍历抽取重要信息[组名、链接、人数、介绍]
+        groupInfoList = []
+        # for resultIdx in xrange(len(resultOfSoup)):
+        #     try:
+        #         result = resultOfSoup[resultIdx]
+        #         groupName = "".join(list(result.find("div", attrs={'class':"title"}).strings)).strip()
+        #         groupHref = result.a.get("href")
+        #         groupMemberPlain = result.find("div", attrs={'class':"info"}).string
+        #         groupMemberNum = int(re.findall('^[0-9]\d*', groupMemberPlain))
+        #         groupIntro = result.p.string.strip().replace(" ", "").replace("", "")
+        #         groupInfoList.append(groupName, groupHref, groupMemberNum, groupIntro)
+        #     except Exception, e:
+        #         logging.error(e)
+        # return groupInfoList
+
 
 
 ################################### PART３ TEST #######################################
