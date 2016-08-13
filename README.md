@@ -1,5 +1,5 @@
 # Douban-Crawler
-爬豆瓣小组的帖子信息。
+指定小组查询关键词，完全傻瓜式获取指定个数豆瓣小组详细信息，以及小组下指定个数帖子信息。
 
 ## CRAWLER库表结构
 三个数据表：小组表，用户表，帖子表。
@@ -53,19 +53,20 @@
 |-|:-:|::|:|    
 |POST_TITLE|TEXT|帖子标题|"这是标题"|  
 |POST_CREATE_DATE|VARCHAR(19)|帖子创建时间|"2014-08-10 16:58:21"|  
-|POST_LAST_REPLY_DATE|VARCHAR(16)|帖子最后回复时间|"2015-08-13 15:22"|  
-|POST_REPLY_NUM|INT|帖子回复个数|10|  
+|POST_LAST_COMMENT_DATE|VARCHAR(16)|帖子最后回复时间|"2015-08-13 15:22"|  
+|POST_COMMENT_NUM|INT|帖子回复个数|10|  
 ##### 帖子创建者基本信息  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
 |POST_AUTHOR_NAME|VARCHAR(50)|帖子创建者名称|"章小希"|  
 |POST_AUTHOR_ID|VARCHAR(10)|帖子创建者全站唯一性ID|"148647315"|  
+|POST_AUTHOR_SIGNATURE|TEXT|签名|"目标，前进；一切只为生活"|  
 |POST_AUTHOR_URL|TEXT|帖子创建者个人页面地址|"https://www.douban.com/people/148647315/"|  
 ##### 内容和评论  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
 |POST_CONTENT|TEXT|帖子内容|"这是帖子内容"|  
-|POST_CREATE_USER_COMMENT|TEXT|帖子创建者的所有评论|"这是评论1+2+3拼接起来的结果"|  
+|POST_AUTHOR_COMMENT|TEXT|帖子创建者的所有评论|"这是评论1+2+3拼接起来的结果"|  
 ##### 感兴趣信息(需要提取/抽取)  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
@@ -82,8 +83,9 @@
 |USER_SOURCE|VARCHAR(10)|用户来源|"douban"或"tieba"|  
 |USER_NAME|TEXT|用户名、昵称|"小豆芽"|  
 |USER_ID|VARCHAR(20)|全站唯一性ID|"yncyd"|  
+|USER_SEX|INT|性别|0(未知)或1(男)或2(女)|    
+|USER_SIGNATURE|TEXT|签名|"目标，前进；一切只为生活"|  
 |USER_URL|TEXT|个人页面|"https://www.douban.com/people/yncyd/"|  
-|USER_SEX|INT|性别|1(男)或0(女)|  
   
 ##### 发帖情况(定期更新)  
 |字段名|类型|含义|举例|  

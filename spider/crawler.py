@@ -134,7 +134,6 @@ class Crawler(object):
         # 小组活跃信息[3项]当天帖子总数、当天帖子历史累计回复数、平均帖子回复数
         # 组长信息[3项]管理员姓名、全站唯一性ID、个人页面地址
         # 系统信息[1项]表更新时间
-
         groupInfoDict = {}
 
         # 小组基本信息
@@ -237,13 +236,58 @@ class Crawler(object):
         # 解析soup对象获取所有帖子链接
         postTitlesOfSoup = soup.find_all("td", attrs={"class": "title"})
         postUrlList = map(lambda tag: tag.a['href'], postTitlesOfSoup)
+        logging.info("成功获得 {0} 个帖子链接.".format(len(postUrlList)))
         return postUrlList
+
+    def getPostDetailInfoDict(self, postUrl):
+        logging.info("postUrl:{0}".format(postUrl))
+        # 发送访问请求和接收
+        try:
+            request = urllib2.Request(postUrl)
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError, e:
+            logging.error("HTTPError code:{0}, URL:{1}".format(e.code, postUrl))
+        except Exception, e:
+            logging.error(e)
+
+        # 读取响应内容并转换为soup对象
+        html = response.read()
+        soup = BeautifulSoup(html, "lxml")
+        postContent = soup.find("div", attrs={"class":"topic-content clearfix"})
+        postComment = soup.find("ul", attrs={"id":"comments", "class":"topic-reply"})
+
+        # 标题、创建时间、最后回复时间、回复个数、喜欢人数
+        # 作者姓名、ID、签名、个人地址
+        # 内容、作者评论
+        # QQ、微信号、电话号、包含地名
+        postDetailInfoDict = {}
+
+        postDetailInfoDict['postTitle'] = re.findall('<h1>\n(.*)\n</h1>', str(soup.h1))[0].strip()
+        postDetailInfoDict['postCreateDate'] = str(postContent.find("span", attrs={"class":"color-green"}).string).strip()
+        postDetailInfoDict['postCommentNum'] = str(postComment).count('<p class="">')
+        if postDetailInfoDict['postCommentNum'] > 0:
+            postDetailInfoDict['postLastCommentDate'] = re.findall('<span class="pubtime">(.*)</span>')[-1] if html.count('paginator') == 0 else self.getPostLastCommentDate(soup)
+        else:
+            postDetailInfoDict['postLastCommentDate'] = postDetailInfoDict['postCreateDate']
+
+
+
+        print "============================="
+        print postDetailInfoDict['postTitle']
+        print postDetailInfoDict['postCreateDate']
+        print type(postDetailInfoDict['postCreateDate'])
+        print len(postComment)
+        print postDetailInfoDict['postCommentNum']
+        print postDetailInfoDict['postLastCommentDate']
+
+    def getPostLastCommentDate(self, soup):
+        pageContent = soup.find_all('div', attrs={'class': "paginator"})
+
 
 
 ################################### PART3 TEST #######################################
 
 # 初始化参数
-#discussionUrlOfGroup = "https://www.douban.com/group/HZhome/discussion?start=0"
 queryKeywordsList = ["杭州", "租房"]
 topNGroup = 1
 maxGroupsNumForEachPage = 20
@@ -253,6 +297,20 @@ findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEB
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 crawler = Crawler()
 
-groupsInfoDictList = crawler.getGroupsInfoDictList(queryKeywordsList, topNGroup, maxGroupsNumForEachPage, findGroupUrl)
-crawler.getTodayPostUrlListOfGroup(groupsInfoDictList[0]['groupUrl'])
+# 获取指定关键词下的小组详细信息
+groupsInfoDictList = crawler.getGroupsInfoDictList(queryKeywordsList,\
+                                                   topNGroup,\
+                                                   maxGroupsNumForEachPage,\
+                                                   findGroupUrl)
+
+# 获取指定小组(链接)的所有今日帖子地址
+postUrl2DList = map(lambda groupInfoDict:\
+                        crawler.getTodayPostUrlListOfGroup(groupInfoDict['groupUrl']),\
+                    groupsInfoDictList)
+postUrlList = flatten(postUrl2DList)
+
+# 根据帖子地址获取帖子详细信息
+postsDetailInfoDictList = map(lambda postUrl:\
+                                  crawler.getPostDetailInfoDict(postUrl),\
+                              postUrlList)
 
