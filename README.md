@@ -13,33 +13,31 @@
 |GROUP_SOURCE|VARCHAR(10)|数据来源|"douban"或"tieba"|  
 |GROUP_QUERY|VARCHAR(20)|查询query(类似GROUP_TAG)|"北京,IT"|  
 |GROUP_NAME|VARCHAR(30)|组名、吧名|"北京读书交友会"|  
-|GROUP_ID|VARCHAR(10)|全站唯一性ID|"576850"|  
+|GROUP_ID|VARCHAR(20)|全站唯一性ID|"576850"|  
 |GROUP_MEMBER_NUM|INT|小组人数|300|  
-|GROUP_URL|TEXT|地址|"https://www.douban.com/group/10274/"|  
+|GROUP_URL|TEXT|地址|"https://www.douban.com/group/10274/"|    
+|GROUP_INTRO|TEXT|介绍|"小组介绍内容"|  
 |GROUP_CREATE_DATE|VARCHAR(10)|小组创建时间|2010-10-10|  
 |GROUP_TAG|VARCHAR(20)|小组标签|"北京,读书,交友"|  
 
 ##### 活跃度基本信息(每天字段更新)  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
-|POST_FIRST_REPLY_DATE|VARCHAR(16)|小组首页第一条最后回复时间|"2015-11-19 21:04"|  
-|POST_FIRST_CREATE_DATE|VARCHAR(16)|小组首页第一条创建时间|"2015-11-19 21:04"|  
-|POST_MIDDLE_REPLY_DATE|VARCHAR(16)|小组首页中间一条最后回复时间|"2015-11-19 21:04"|  
-|POST_MIDDLE_CREATE_DATE|VARCHAR(16)|小组首页中间一条创建时间|"2015-11-19 21:04"|  
-|POST_LAST_REPLY_DATE|VARCHAR(16)|小组首页第一条最后回复时间|"2015-11-19 21:04"|  
-|POST_LAST_CREATE_DATE|VARCHAR(16)|小组首页最后一条创建时间|"2015-11-19 21:04"|  
-
-##### 表更新时间(定期更新)  
-|字段名|类型|含义|举例|  
-|-| :-:|::|:|   
-|TABLE_UPDATE_DATE|VARCHAR(16)|最后一次表更新时间|"2015-11-19 21:04:48"|  
+|CURRENT_DAY_POST_NUM|INT|小组当天总帖数|100|  
+|CURRENT_DAY_COMMENT_NUM|INT|当天帖子累计总回复数|5000|
+|CURRENT_DAY_AVE_COMMENT_NUM|INT|当天帖子累计总回复数|50|      
 
 ##### 管理员基本信息  
 |字段名|类型|含义|举例|  
 |-| :-:|::|:|   
 |ADMIN_NAME|VARCHAR(50)|管理员姓名|"章小希"|  
-|ADMIN_ID|VARCHAR(10)|全站唯一性ID(豆瓣唯一ID、贴吧唯一ID)|"148647315"|  
-|ADMIN_URL|TEXT|管理员账号页面|"https://www.douban.com/people/148647315/"|  
+|ADMIN_ID|VARCHAR(20)|全站唯一性ID(豆瓣唯一ID、贴吧唯一ID)|"148647315"|  
+|ADMIN_URL|TEXT|管理员账号页面|"https://www.douban.com/people/148647315/"|
+  
+##### 表更新时间(定期更新)  
+|字段名|类型|含义|举例|  
+|-| :-:|::|:|   
+|TABLE_UPDATE_DATE|VARCHAR(16)|最后一次表更新时间|"2015-11-19 21:04:48"|
 
 ### POST表  
 
@@ -83,7 +81,7 @@
 |-| :-:|::|:|  
 |USER_SOURCE|VARCHAR(10)|用户来源|"douban"或"tieba"|  
 |USER_NAME|TEXT|用户名、昵称|"小豆芽"|  
-|USER_ID|VARCHAR(10)|全站唯一性ID|"yncyd"|  
+|USER_ID|VARCHAR(20)|全站唯一性ID|"yncyd"|  
 |USER_URL|TEXT|个人页面|"https://www.douban.com/people/yncyd/"|  
 |USER_SEX|INT|性别|1(男)或0(女)|  
   
@@ -98,11 +96,7 @@
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|  
 |USER_LAST_LOGIN|VARCHAR(16)|上次登陆时间|"2015-01-01 11:11"|  
-|USER_CREATE_DATE|VARCHAR(12)|用户创建日期|"2015-01-01"|  
-##### 表更新时间(定期更新)  
-|字段名|类型|含义|举例|  
-|-|  
-|TABLE_UPDATE_DATE|VARCHAR(16)|最后一次表更新时间|"2015-11-19 21:04:48"|  
+|USER_CREATE_DATE|VARCHAR(12)|用户创建日期|"2015-01-01"|    
 
 ##### 感兴趣信息(需要提取/抽取)  
 |字段名|类型|含义|举例|  
@@ -112,3 +106,8 @@
 |USER_TEL|VARCHAR(15)|手机号|"13311111111"|  
 |USER_MAIL|TEXT|邮箱|"zhangsan0912@gmail.com"|  
 |USER_ADDRESS|TEXT|所在位置|"北京市海淀区XXX路XXX号"或"XXX区"或"南京"|
+
+##### 表更新时间(定期更新)  
+|字段名|类型|含义|举例|  
+|-|  
+|TABLE_UPDATE_DATE|VARCHAR(16)|最后一次表更新时间|"2015-11-19 21:04:48"|
