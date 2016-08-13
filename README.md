@@ -58,9 +58,9 @@
 ##### 帖子创建者基本信息  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
-|POST_CREATE_USER_NAME|VARCHAR(50)|帖子创建者名称|"章小希"|  
-|POST_CREATE_USER_ID|VARCHAR(10)|帖子创建者全站唯一性ID|"148647315"|  
-|POST_CREATE_USER_URL|TEXT|帖子创建者个人页面地址|"https://www.douban.com/people/148647315/"|  
+|POST_AUTHOR_NAME|VARCHAR(50)|帖子创建者名称|"章小希"|  
+|POST_AUTHOR_ID|VARCHAR(10)|帖子创建者全站唯一性ID|"148647315"|  
+|POST_AUTHOR_URL|TEXT|帖子创建者个人页面地址|"https://www.douban.com/people/148647315/"|  
 ##### 内容和评论  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    

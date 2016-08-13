@@ -76,11 +76,6 @@ class Crawler(object):
 
         return basicInfoList
 
-    # 过滤基本信息列表中的无用条目
-    def filterPostsBasicInfoList(self, basicInfoList):
-        pass
-        return basicInfoList
-
 
     # 根据需要的小组数目计算小组信息的目录页
     def getGroupsCategoryUrlList(self, queryKeywordsList, topNGroup=10,
@@ -120,7 +115,7 @@ class Crawler(object):
 
 
     # 取出关键标签部分
-    def getGroupInfo(self, groupUrl, queryKeywordsList):
+    def getGroupInfoDict(self, groupUrl, queryKeywordsList):
         # 发送访问请求和接收
         try:
             request = urllib2.Request(groupUrl)
@@ -140,66 +135,44 @@ class Crawler(object):
         # 组长信息[3项]管理员姓名、全站唯一性ID、个人页面地址
         # 系统信息[1项]表更新时间
 
+        groupInfoDict = {}
+
         # 小组基本信息
-        groupSource = re.findall(r"www\.(.*)\.com", groupUrl)[0]
-        groupQuery = ",".join(queryKeywordsList)
-        groupName = soup.title.string.strip()
-        groupId = re.findall(r'group/(.*)/', groupUrl)[0]
+        groupInfoDict['groupSource'] = re.findall(r"www\.(.*)\.com", groupUrl)[0]
+        groupInfoDict['groupQuery'] = ",".join(queryKeywordsList)
+        groupInfoDict['groupName'] = soup.title.string.strip()
+        groupInfoDict['groupId'] = re.findall(r'group/(.*)/', groupUrl)[0]
         try:
-            groupMemberNum = re.findall(r'members">浏览所有.* \((.*)\)', html)[0]
+            groupInfoDict['groupMemberNum'] = int(re.findall(r'members">浏览所有.* \((.*)\)', html)[0])
         except Exception, e:
-            groupMemberNum = '0'
+            groupInfoDict['groupMemberNum'] = 0
             logging.error(e)
-        #groupUrl = groupUrl
-        groupIntro = str(soup.findAll("div", attrs={"class": "group-intro"})[0])
+        groupInfoDict['groupUrl'] = groupUrl
+        groupInfoDict['groupIntro'] = str(soup.findAll("div", attrs={"class": "group-intro"})[0])
         groupBoard = soup.find("div", attrs={"class": "group-board"}).p
-        groupCreateDate = re.findall(r"\d{4}-\d{2}-\d{2}", str(groupBoard))[0]
+        groupInfoDict['groupCreateDate'] = re.findall(r"\d{4}-\d{2}-\d{2}", str(groupBoard))[0]
         groupTagList = re.findall('<a class="tag" href=".*>(.*)</a>', html)
-        groupTag = ",".join(groupTagList)
+        groupInfoDict['groupTag'] = ",".join(groupTagList)
 
         # 小组活跃信息
         allPostInfoList = soup.find("table", attrs={"class":"olt"}).findAll("td", attrs={"class":"", "nowrap":"nowrap"})
         currentDayCommentNumStrList = re.findall(r'<td class="" nowrap="nowrap">(\d*)</td>', str(allPostInfoList))
         currentDayCommentNumIntList = map(lambda s: 0 if s == '' else int(s), currentDayCommentNumStrList)
-        currentDayCommentNum = sum(currentDayCommentNumIntList)
-        currentDayPostNum = len(currentDayCommentNumStrList)
-        currentDayAveCommentNum = int(float(currentDayCommentNum)/currentDayPostNum)
+        groupInfoDict['currentDayCommentNum'] = sum(currentDayCommentNumIntList)
+        groupInfoDict['currentDayPostNum'] = len(currentDayCommentNumStrList)
+        groupInfoDict['currentDayAveCommentNum'] = int(float(groupInfoDict['currentDayCommentNum']/groupInfoDict['currentDayPostNum']))
 
         # 组长信息
-        adminName = str(groupBoard.a.string)
-        adminUrl = groupBoard.a['href']
-        adminId = re.findall('people/(.*)/', adminUrl)[0]
+        groupInfoDict['adminName'] = str(groupBoard.a.string)
+        groupInfoDict['adminUrl'] = groupBoard.a['href']
+        groupInfoDict['adminId'] = re.findall('people/(.*)/', groupInfoDict['adminUrl'])[0]
 
         # 表更新时间
-        tableUpdateDate = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        groupInfoDict['tableUpdateDate'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 
-        # print "=============="
-        # print groupSource
-        # print groupQuery
-        # print groupName
-        # print groupId
-        # print groupMemberNum
-        # print groupUrl
-        # print groupIntro
-        # print groupCreateDate
-        # print groupTag
-        #
-        # print currentDayCommentNum
-        # print currentDayPostNum
-        # print currentDayAveCommentNum
-        #
-        # print adminName
-        # print adminUrl
-        # print adminId
-        #
-        # print tableUpdateDate
-        return (groupSource, groupQuery, groupName, groupId, groupMemberNum,\
-                groupUrl, groupIntro, groupCreateDate, groupTag,\
-                currentDayPostNum, currentDayCommentNum, currentDayAveCommentNum,\
-                adminName, adminId, adminUrl,\
-                tableUpdateDate)
+        return groupInfoDict
 
-
+    # 根据小组查询结果页面Url获取小组groupUrl
     def getGroupUrl(self, groupCategoryUrl):
         # 发送访问请求和接收
         try:
@@ -215,21 +188,12 @@ class Crawler(object):
         soup = BeautifulSoup(html, "lxml")
         resultOfSoup = soup.find_all("div", attrs={'class': "result"})
 
-        # 遍历抽取重要信息[组名、链接、人数、介绍]
+        # 依次获取groupUrl
         groupUrlList = []
-
         for resultIdx in xrange(len(resultOfSoup)):
             try:
                 result = resultOfSoup[resultIdx]
-                #groupName = "".join(list(result.find("div", attrs={'class':"title"}).strings)).strip()
                 groupUrl = result.a.get("href")
-                #groupId = re.findall(r'group/(.*)/', groupHref)[0]
-                #print groupId
-                #groupMemberPlain = result.find("div", attrs={'class':"info"}).string
-                #groupMemberNum = int(re.findall('^[0-9]\d*', groupMemberPlain)[0])
-                #groupIntro = result.p.string.strip().replace(" ", "").replace("", "")
-                #print groupHref
-                #groupInfoList.append(groupName, groupHref, groupMemberNum, groupIntro)
                 groupUrlList.append(groupUrl)
             except Exception, e:
                 logging.error(e)
@@ -237,7 +201,7 @@ class Crawler(object):
 
 
     # 查找指定关键词的前topNGroup个群组的信息[组名、地址、人数、介绍]
-    def getGroupsInfoList(self, queryKeywordsList,
+    def getGroupsInfoDictList(self, queryKeywordsList,
                           topNGroup=10,
                           maxGroupsNumForEachPage=20,
                           findGroupUrl="https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance"):
@@ -250,11 +214,30 @@ class Crawler(object):
         groupsUrlList = groupsUrlList[:topNGroup] if len(groupsUrlList) > topNGroup else groupsUrlList
 
         # 获取group详细信息并取topNGroup
-        groupsInfoTupleList = map(lambda groupUrl: self.getGroupInfo(groupUrl, queryKeywordsList), groupsUrlList)
-        logging.info("成功获取有关【{0}】 总计 {1} 个小组的详细信息.".format(",".join(queryKeywordsList), len(groupsInfoTupleList)))
+        groupsInfoDictList = map(lambda groupUrl: self.getGroupInfoDict(groupUrl, queryKeywordsList), groupsUrlList)
+        logging.info("成功获取有关【{0}】 总计 {1} 个小组的详细信息.".format(",".join(queryKeywordsList), len(groupsInfoDictList)))
+        return groupsInfoDictList
 
-        # 获取groupIntroUrl页面的小组详细信息
-        return groupsInfoTupleList
+    # 获取小组当天所有帖子链接
+    def getTodayPostUrlListOfGroup(self, groupUrl):
+        # 发送访问请求和接收
+        logging.info("groupUrl:{0}".format(groupUrl))
+        try:
+            request = urllib2.Request(groupUrl)
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError, e:
+            logging.error("HTTPError code:{0}, URL:{1}".format(e.code, groupUrl))
+        except Exception, e:
+            logging.error(e)
+
+        # 读取响应内容并转换为soup对象
+        html = response.read()
+        soup = BeautifulSoup(html, "lxml")
+
+        # 解析soup对象获取所有帖子链接
+        postTitlesOfSoup = soup.find_all("td", attrs={"class": "title"})
+        postUrlList = map(lambda tag: tag.a['href'], postTitlesOfSoup)
+        return postUrlList
 
 
 ################################### PART3 TEST #######################################
@@ -262,7 +245,7 @@ class Crawler(object):
 # 初始化参数
 #discussionUrlOfGroup = "https://www.douban.com/group/HZhome/discussion?start=0"
 queryKeywordsList = ["杭州", "租房"]
-topNGroup = 5
+topNGroup = 1
 maxGroupsNumForEachPage = 20
 findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance"
 
@@ -270,26 +253,6 @@ findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEB
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 crawler = Crawler()
 
-groupsInfoList = crawler.getGroupsInfoList(queryKeywordsList, topNGroup, maxGroupsNumForEachPage, findGroupUrl)
-
-
-
-"""
-# 执行爬取
-postsBasicInfoList = getPostsBasicInfoList(discussionUrlOfGroup)
-#filteredBasicInfoList = filterPostsBasicInfoList(postsBasicInfoList)
-
-# 打印结果
-for basicInfoIdx in xrange(len(postsBasicInfoList)):
-    title = postsBasicInfoList[basicInfoIdx][0]
-    href = postsBasicInfoList[basicInfoIdx][1]
-    userName = postsBasicInfoList[basicInfoIdx][2]
-    doubanId = postsBasicInfoList[basicInfoIdx][3]
-    userLink = postsBasicInfoList[basicInfoIdx][4]
-    commentNum = postsBasicInfoList[basicInfoIdx][5]
-    lastTime = postsBasicInfoList[basicInfoIdx][6]
-
-    logging.info("idx:{0}, title:{1}, href:{2}, userName:{3}, doubanId:{4}, userLink:{5}, commentNum:{6}, lastTime:{7}".format(basicInfoIdx+1, title, href, userName, doubanId, userLink, commentNum, lastTime))
-"""
-
+groupsInfoDictList = crawler.getGroupsInfoDictList(queryKeywordsList, topNGroup, maxGroupsNumForEachPage, findGroupUrl)
+crawler.getTodayPostUrlListOfGroup(groupsInfoDictList[0]['groupUrl'])
 
