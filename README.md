@@ -44,36 +44,46 @@
 ##### 来源和所在小组基本信息  
 |字段名|类型|含义|举例|  
 |-| :-:|::|:|   
-|GROUP_SOURCE|VARCHAR(10)|小组来源|"douban"或"tieba"|  
+|GROUP_SOURCE|VARCHAR(10)|小组来源|"douban"或"tieba"|
+|GROUP_URL|TEXT|小组地址链接|"https://www.douban.com/group/551307/"|
 |GROUP_ID|VARCHAR(20)|所在来源的全(站)局唯一性ID|"hangzhougonglue"|  
 |GROUP_NAME|VARCHAR(30)|小组名称|"杭州旅游"|  
 
 ##### 帖子基本信息  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
-|POST_TITLE|TEXT|帖子标题|"这是标题"|  
+|POST_URL|TEXT|帖子链接|"https://www.douban.com/group/topic/88272843/"|
+|POST_TITLE|TEXT|帖子标题|"这是标题"|
+|POST_ID|VARCHAR(10)|帖子唯一性ID|"850407300"|
 |POST_CREATE_DATE|VARCHAR(19)|帖子创建时间|"2014-08-10 16:58:21"|  
 |POST_LAST_COMMENT_DATE|VARCHAR(16)|帖子最后回复时间|"2015-08-13 15:22"|  
-|POST_COMMENT_NUM|INT|帖子回复个数|10|  
+|POST_COMMENT_NUM|INT|帖子回复个数|10|
+|POST_LIKE_NUM|INT|喜欢人数|10|
+
 ##### 帖子创建者基本信息  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
 |POST_AUTHOR_NAME|VARCHAR(50)|帖子创建者名称|"章小希"|  
 |POST_AUTHOR_ID|VARCHAR(10)|帖子创建者全站唯一性ID|"148647315"|  
 |POST_AUTHOR_SIGNATURE|TEXT|签名|"目标，前进；一切只为生活"|  
-|POST_AUTHOR_URL|TEXT|帖子创建者个人页面地址|"https://www.douban.com/people/148647315/"|  
+|POST_AUTHOR_URL|TEXT|帖子创建者个人页面地址|"https://www.douban.com/people/148647315/"|
+
 ##### 内容和评论  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
-|POST_CONTENT|TEXT|帖子内容|"这是帖子内容"|  
-|POST_AUTHOR_COMMENT|TEXT|帖子创建者的所有评论|"这是评论1+2+3拼接起来的结果"|  
+|POST_CONTENT|TEXT|帖子内容|"这是帖子内容"|
+|POST_IMG_NUM|INT|图片张数|3|
+|POST_IMG_URL_LIST|TEXT|所有图片地址列表的字符串(用"\t"拼接)|'www.1.com/1.png::www.1.com/2.jpg'|
+|POST_AUTHOR_COMMENT|TEXT|帖子创建者的所有评论|"这是评论1+2+3拼接起来的结果"|
+|POST_AUTHOR_COMMENT_NUM|INT|帖子创建者的评论个数|10|
+
 ##### 感兴趣信息(需要提取/抽取)  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|    
 |POST_CONTENT_QQ|VARCHAR(12)|帖子内容里的QQ号|"12345"|  
 |POST_CONTENT_WECHAT|VARCHAR(16)|帖子内容里的微信号|"12345"|  
 |POST_CONTENT_TEL|VARCHAR(15)|帖子内容里的电话号|"13312345678"|  
-|POST_CONTENT_ADDRESS|VARCHAR(30)|帖子内容里的地址|"北京市海淀区"|  
+|POST_CONTENT_ADDRESS|VARCHAR(30)|帖子内容里的地址|"北京市海淀区"|
 
 ### USER表  
 注备:主要用来记录小组(或贴吧)管理员和发帖人个人信息  
@@ -93,7 +103,8 @@
 |POST_NUM|INT|发帖总数|32|  
 |POST_LAST_CREATE_DATE|VARCHAR(16)|用户发帖目录页第1页最后一次发帖日期|"2015-01-01 11:11"|  
 |POST_MIDDLE_CREATE_DATE|VARCHAR(16)|用户发帖目录页第1页中间一次发帖日期|"2015-01-01 11:11"|  
-|POST_FIRST_CREATE_DATE|VARCHAR(16)|用户发帖目录页第1页第一次发帖日期|"2015-01-01 11:11"|  
+|POST_FIRST_CREATE_DATE|VARCHAR(16)|用户发帖目录页第1页第一次发帖日期|"2015-01-01 11:11"|
+
 ##### 活跃程度(定期更新)  
 |字段名|类型|含义|举例|  
 |-|:-:|::|:|  

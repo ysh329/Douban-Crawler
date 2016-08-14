@@ -217,6 +217,7 @@ class Crawler(object):
         logging.info("成功获取有关【{0}】 总计 {1} 个小组的详细信息.".format(",".join(queryKeywordsList), len(groupsInfoDictList)))
         return groupsInfoDictList
 
+
     # 获取小组当天所有帖子链接
     def getTodayPostUrlListOfGroup(self, groupUrl):
         # 发送访问请求和接收
@@ -239,11 +240,22 @@ class Crawler(object):
         logging.info("成功获得 {0} 个帖子链接.".format(len(postUrlList)))
         return postUrlList
 
+
     def getPostDetailInfoDict(self, postUrl):
         logging.info("postUrl:{0}".format(postUrl))
         # 发送访问请求和接收
         try:
-            request = urllib2.Request(postUrl)
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36",\
+                       'Referer': postUrl,\
+                       'Accept':'*/*',\
+                       #'Accept-Encoding':'gzip, deflate, sdch',\
+                       'Accept-Encoding':'utf8',\
+                       'Accept-Language':'zh-CN,zh;q=0.8',\
+                       'Connection':'keep-alive',\
+                       'Cookie':'bid=7xWCDDoU6pk; gr_user_id=78b1ca83-183c-49ee-b79c-c7db9f211ad4; viewed="26308725_25753386"; ps=y; ll="118172"; ct=y; ap=1; as="https://www.douban.com/group/topic/85508155/"; _vwo_uuid_v2=4967D4925ED4A7F3DAB6ACBF56139020|ea6d135f73d347c2b2bd567e10a10b4b; __utmt=1; _ga=GA1.2.1582242860.1470147765; _gat=1; __utma=30149280.1582242860.1470147765.1471179208.1471182104.19; __utmb=30149280.18.5.1471182180158; __utmc=30149280; __utmz=30149280.1470802677.13.8.utmcsr=121.42.47.99|utmccn=(referral)|utmcmd=referral|utmcct=/yuenshome/wordpress/',\
+                       #XX 'Host':'erebor.douban.com',
+                        }
+            request = urllib2.Request(postUrl, headers=headers,origin_req_host='erebor.douban.com')
             response = urllib2.urlopen(request)
         except urllib2.HTTPError, e:
             logging.error("HTTPError code:{0}, URL:{1}".format(e.code, postUrl))
@@ -256,39 +268,118 @@ class Crawler(object):
         postContent = soup.find("div", attrs={"class":"topic-content clearfix"})
         postComment = soup.find("ul", attrs={"id":"comments", "class":"topic-reply"})
 
-        # 标题、创建时间、最后回复时间、回复个数、喜欢人数
-        # 作者姓名、ID、签名、个人地址
-        # 内容、作者评论
-        # QQ、微信号、电话号、包含地名
+        # [4项]小组地址、来源、组全站唯一性ID、小组名称
+        # [7项]帖子链接、标题、ID、创建时间、最后回复时间、回复个数、喜欢人数
+        # [3项]作者姓名、ID、签名、个人地址
+        # [5项]内容、图片张数、图片地址列表字符串、作者评论、作者评论个数
+        # [4项]QQ、微信号、电话号、包含地名
         postDetailInfoDict = {}
 
+        # 小组来源、组全站唯一性ID、小组名称
         try:
-            postDetailInfoDict['postTitle'] = re.findall('<h1>\n(.*)\n</h1>', str(soup.h1))[0].strip()
+            postDetailInfoDict['groupUrl'] = re.findall('<a href="(.*)\?ref=sidebar">', html)[0].encode("utf8")
         except:
-            postDetailInfoDict['postTitle'] = soup.title.text
-        # postDetailInfoDict['postCreateDate'] = str(postContent.find("span", attrs={"class":"color-green"}).string).strip()
-        #postDetailInfoDict['postCommentNum'] = str(postComment).count('<p class="">')
-        postDetailInfoDict['postCommentNum'] = soup.find_all('p', attrs={'class':""})
-        print str(postDetailInfoDict['postCommentNum']).count('<p class="">')
+            postDetailInfoDict['groupUrl'] = re.findall('<a href="(.*)#topics', str(soup))[0].encode("utf8")
+        postDetailInfoDict['groupSource'] = re.findall('www\.(.*)\.com', postDetailInfoDict['groupUrl'])[0].encode("utf8")
+        postDetailInfoDict['groupId'] = re.findall('group/(.*)/', postDetailInfoDict['groupUrl'])[0].encode("utf8")
+        postDetailInfoDict['groupName'] = re.findall('/\?ref=sidebar">(.*)</a>', html)[1].encode("utf8")
+
+        logging.info("postDetailInfoDict['groupUrl']:{0}".format(postDetailInfoDict['groupUrl']))
+        logging.info("postDetailInfoDict['groupSource']:{0}".format(postDetailInfoDict['groupSource']))
+        logging.info("postDetailInfoDict['groupId']:{0}".format(postDetailInfoDict['groupId']))
+        logging.info("postDetailInfoDict['groupName']:{0}".format(postDetailInfoDict['groupName']))
+
+        # 帖子链接、标题、ID、创建时间、最后回复时间、回复个数、喜欢人数
+        postDetailInfoDict['postUrl'] = postUrl
+        # postTitle
+        try: # 查找是否存在长标题的标签并匹配
+            postDetailInfoDict['postTitle'] = re.findall('<strong>标题：</strong>(.*)</td><td class="tablerc"></td></tr>', str(postContent))[0].encode("utf8")
+        except:
+            postDetailInfoDict['postTitle'] = soup.title.text.strip().encode('utf8')
+        postDetailInfoDict['postCreateDate'] = str(postContent.find("span", attrs={"class":"color-green"}).string).strip().encode("utf8")
+        postDetailInfoDict['postCommentNum'] = (len(postComment)-1)/2
+        # postLastCommentDate
         if postDetailInfoDict['postCommentNum'] > 0:
-            postDetailInfoDict['postLastCommentDate'] = re.findall('<span class="pubtime">(.*)</span>', html)[-1] if html.count('paginator') == 0 else self.getPostLastCommentDate(soup)
+            postDetailInfoDict['postLastCommentDate'] = re.findall('<span class="pubtime">(.*)</span>', html)[-1].encode("utf8") if html.count('paginator') == 0 else self.getPostLastCommentDate(soup).encode("utf8")
         else:
-            postDetailInfoDict['postLastCommentDate'] = postDetailInfoDict['postCreateDate']
+            postDetailInfoDict['postLastCommentDate'] = postDetailInfoDict['postCreateDate'].encode("utf8")
+
+        try:
+            postDetailInfoDict["postLikeNum"] = int(re.findall(u'type=like#sep">(\d*).*</a>', str(postContent))[0])
+        except:
+            postDetailInfoDict["postLikeNum"] = 0
+
+        logging.info("postDetailInfoDict['postUrl']:{0}".format(postDetailInfoDict['postUrl']))
+        logging.info("postDetailInfoDict['postTitle']:{0}".format(postDetailInfoDict['postTitle']))
+        logging.info("postDetailInfoDict['postCreateDate']:{0}".format(postDetailInfoDict['postCreateDate']))
+        logging.info("postDetailInfoDict['postCommentNum']):{0}".format(postDetailInfoDict['postCommentNum']))
+        logging.info("postDetailInfoDict['postLastCommentDate']:{0}".format(postDetailInfoDict['postLastCommentDate']))
+        logging.info("postDetailInfoDict['postLikeNum']:{0}".format(postDetailInfoDict['postLikeNum']))
+
+        # 作者姓名、ID、签名、个人地址
+        postDetailInfoDict['postAuthorName'] = re.findall('alt="(.*)" class="pil"', str(postContent))[0].encode("utf8")
+        postDetailInfoDict['postAuthorUrl'] = re.findall('(https://www\.douban\.com/people/.*/)"><img', str(postContent))[0].encode("utf8")
+        postDetailInfoDict['postAuthorId'] = re.findall('https://www\.douban\.com/people/(.*)/"><img', str(postContent))[0].encode("utf8")
+        try:
+            postDetailInfoDict['postAuthorSignature'] = re.findall('</a>\((.*)\)</span>', str(postContent))[0].encode("utf8")
+        except:
+            postDetailInfoDict['postAuthorSignature'] = "".encode("utf8")
+
+        logging.info("postDetailInfoDict['postAuthorName']:{0}".format(postDetailInfoDict['postAuthorName']))
+        logging.info("postDetailInfoDict['postAuthorUrl']:{0}".format(postDetailInfoDict['postAuthorUrl']))
+        logging.info("postDetailInfoDict['postAuthorId']:{0}".format(postDetailInfoDict['postAuthorId']))
+        logging.info("postDetailInfoDict['postAuthorSignature']:{0}".format(postDetailInfoDict['postAuthorSignature']))
+
+        # 内容、图片张数、图片地址列表字符串、作者评论、作者评论个数
+        postDetailInfoDict['postContent'] = postContent.find("div", attrs={"class":"topic-content"}).text.replace("\r", "").replace("\n", "").replace(" ", "").encode("utf8")
+        postImgTags = postContent.find_all("img", attrs={"class":""})
+        postDetailInfoDict['postImgNum'] = len(postImgTags)
+        if postDetailInfoDict['postImgNum'] > 0:
+            postImgUrlList = map(lambda tag: tag['src'].encode("utf8"), postImgTags)
+            postDetailInfoDict['postImgUrlList'] = u'\t'.join(postImgUrlList).encode("utf8")
+        else:
+            postDetailInfoDict['postImgUrlList'] = u''.encode("utf8")
+
+        if postDetailInfoDict['postCommentNum'] >= 1:
+            commentUserNameList = re.findall('<a href="https://www\.douban\.com/people/.*/" class="">(.*)</a>', str(postComment))
+            commentContentList = re.findall('<p class="">(.*)</p>', str(postContent))
+            userNameAndCommentContentList = map(lambda name, comment: (name, comment), commentUserNameList, commentContentList)
+
+            authorCommentList = filter(lambda name: postDetailInfoDict['postAuthorName'] in name, userNameAndCommentContentList)
+            postDetailInfoDict['postAuthorCommentNum'] = len(authorCommentList)
+            postDetailInfoDict['postAuthorComment'] = "".join(map(lambda (name, comment): comment, authorCommentList)).encode("utf8")
+
+
+        logging.info("postDetailInfoDict['postContent']:{0}".format(postDetailInfoDict['postContent']))
+        #logging.info("len(postDetailInfoDict['postContent']):{0}".format(len(postDetailInfoDict['postContent'])))
+
+        logging.info("postDetailInfoDict['postImgNum']:{0}".format(postDetailInfoDict['postImgNum']))
+        logging.info("postImgUrlList:{0}".format(postImgUrlList))
+        logging.info("postDetailInfoDict['postImgUrlList']:{0}".format(postDetailInfoDict['postImgUrlList']))
+
+        logging.info("str(postContent):{0}".format(str(postComment)))
+        logging.info("commentUserNameList:{0}".format(commentUserNameList))
+        logging.info("len(commentUserNameList):{0}".format(len(commentUserNameList)))
+        logging.info("commentContentList:{0}".format(commentContentList))
+        logging.info("len(commentContentList):{0}".format(len(commentContentList)))
+
+        logging.info("postDetailInfoDict['postAuthorComment']:{0}".format(postDetailInfoDict['postAuthorComment']))
+        logging.info("postDetailInfoDict['postAuthorCommentNum']:{0}".format(postDetailInfoDict['postAuthorCommentNum']))
 
 
 
-        print "============================="
-        # print postDetailInfoDict['postTitle']
-        # print postDetailInfoDict['postCreateDate']
-        # print type(postDetailInfoDict['postCreateDate'])
-        # print len(postComment)
-        print postDetailInfoDict['postCommentNum']
-        print postDetailInfoDict['postLastCommentDate']
 
+        logging.info("================================================================")
+
+
+
+
+    # 获取最后一条评论的日期
     def getPostLastCommentDate(self, soup):
         pageContent = soup.find_all('div', attrs={'class': "paginator"})
         pageUrlList = re.findall('<a href="(.*)">\d*', str(pageContent))
-        print pageUrlList
+        logging.info("len(pageUrlList):{0}".format(len(pageUrlList)))
+        for idx in xrange(len(pageUrlList)): logging.info("{0}:{1}".format(idx+1, pageUrlList[idx]))
 
 
 
@@ -296,7 +387,7 @@ class Crawler(object):
 ################################### PART3 TEST #######################################
 
 # 初始化参数
-queryKeywordsList = ["摄影"]#""杭州", "租房"]
+queryKeywordsList = ["杭州", "租房"]
 topNGroup = 1
 maxGroupsNumForEachPage = 20
 findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance"
@@ -305,20 +396,23 @@ findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEB
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 crawler = Crawler()
 
-# 获取指定关键词下的小组详细信息
-groupsInfoDictList = crawler.getGroupsInfoDictList(queryKeywordsList,\
-                                                   topNGroup,\
-                                                   maxGroupsNumForEachPage,\
-                                                   findGroupUrl)
+#crawler.getPostDetailInfoDict("https://www.douban.com/group/topic/83083253/")
+crawler.getPostDetailInfoDict("https://www.douban.com/group/topic/88272843/")
 
-# 获取指定小组(链接)的所有今日帖子地址
-postUrl2DList = map(lambda groupInfoDict:\
-                        crawler.getTodayPostUrlListOfGroup(groupInfoDict['groupUrl']),\
-                    groupsInfoDictList)
-postUrlList = flatten(postUrl2DList)
-
-# 根据帖子地址获取帖子详细信息
-postsDetailInfoDictList = map(lambda postUrl:\
-                                  crawler.getPostDetailInfoDict(postUrl),\
-                              postUrlList)
-
+# # 获取指定关键词下的小组详细信息
+# groupsInfoDictList = crawler.getGroupsInfoDictList(queryKeywordsList,\
+#                                                    topNGroup,\
+#                                                    maxGroupsNumForEachPage,\
+#                                                    findGroupUrl)
+#
+# # 获取指定小组(链接)的所有今日帖子地址
+# postUrl2DList = map(lambda groupInfoDict:\
+#                         crawler.getTodayPostUrlListOfGroup(groupInfoDict['groupUrl']),\
+#                     groupsInfoDictList)
+# postUrlList = flatten(postUrl2DList)
+#
+# # 根据帖子地址获取帖子详细信息
+# postsDetailInfoDictList = map(lambda postUrl:\
+#                                   crawler.getPostDetailInfoDict(postUrl),\
+#                               postUrlList)
+#
