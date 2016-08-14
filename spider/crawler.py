@@ -262,33 +262,41 @@ class Crawler(object):
         # QQ、微信号、电话号、包含地名
         postDetailInfoDict = {}
 
-        postDetailInfoDict['postTitle'] = re.findall('<h1>\n(.*)\n</h1>', str(soup.h1))[0].strip()
-        postDetailInfoDict['postCreateDate'] = str(postContent.find("span", attrs={"class":"color-green"}).string).strip()
-        postDetailInfoDict['postCommentNum'] = str(postComment).count('<p class="">')
+        try:
+            postDetailInfoDict['postTitle'] = re.findall('<h1>\n(.*)\n</h1>', str(soup.h1))[0].strip()
+        except:
+            postDetailInfoDict['postTitle'] = soup.title.text
+        # postDetailInfoDict['postCreateDate'] = str(postContent.find("span", attrs={"class":"color-green"}).string).strip()
+        #postDetailInfoDict['postCommentNum'] = str(postComment).count('<p class="">')
+        postDetailInfoDict['postCommentNum'] = soup.find_all('p', attrs={'class':""})
+        print str(postDetailInfoDict['postCommentNum']).count('<p class="">')
         if postDetailInfoDict['postCommentNum'] > 0:
-            postDetailInfoDict['postLastCommentDate'] = re.findall('<span class="pubtime">(.*)</span>')[-1] if html.count('paginator') == 0 else self.getPostLastCommentDate(soup)
+            postDetailInfoDict['postLastCommentDate'] = re.findall('<span class="pubtime">(.*)</span>', html)[-1] if html.count('paginator') == 0 else self.getPostLastCommentDate(soup)
         else:
             postDetailInfoDict['postLastCommentDate'] = postDetailInfoDict['postCreateDate']
 
 
 
         print "============================="
-        print postDetailInfoDict['postTitle']
-        print postDetailInfoDict['postCreateDate']
-        print type(postDetailInfoDict['postCreateDate'])
-        print len(postComment)
+        # print postDetailInfoDict['postTitle']
+        # print postDetailInfoDict['postCreateDate']
+        # print type(postDetailInfoDict['postCreateDate'])
+        # print len(postComment)
         print postDetailInfoDict['postCommentNum']
         print postDetailInfoDict['postLastCommentDate']
 
     def getPostLastCommentDate(self, soup):
         pageContent = soup.find_all('div', attrs={'class': "paginator"})
+        pageUrlList = re.findall('<a href="(.*)">\d*', str(pageContent))
+        print pageUrlList
+
 
 
 
 ################################### PART3 TEST #######################################
 
 # 初始化参数
-queryKeywordsList = ["杭州", "租房"]
+queryKeywordsList = ["摄影"]#""杭州", "租房"]
 topNGroup = 1
 maxGroupsNumForEachPage = 20
 findGroupUrl = "https://www.douban.com/group/search?start=0&cat=1019&q=[REPLACEBYQUERY]&sort=relevance"
