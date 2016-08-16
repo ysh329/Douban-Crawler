@@ -345,7 +345,6 @@ class Crawler(object):
             commentUserNameTagList = postComment.find_all('a', attrs={"href":postDetailInfoDict['postAuthorUrl'], 'class':''})
             print len(commentUserNameTagList)
             commentUserNameList = commentUserNameTagList#map(lambda tag: tag.a, commentUserNameTagList)
-            
             commentContentList = re.findall('<p class="">(.*)</p>', str(postContent))
             userNameAndCommentContentList = map(lambda name, comment: (name, comment), commentUserNameList, commentContentList)
 
