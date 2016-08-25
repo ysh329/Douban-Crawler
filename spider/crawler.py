@@ -369,10 +369,8 @@ class Crawler(object):
         logging.info("postDetailInfoDict['postAuthorComment']:{0}".format(postDetailInfoDict['postAuthorComment']))
         logging.info("postDetailInfoDict['postAuthorCommentNum']:{0}".format(postDetailInfoDict['postAuthorCommentNum']))
 
-
-
-
         logging.info("================================================================")
+        return postDetailInfoDict
 
 
 
