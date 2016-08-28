@@ -340,10 +340,12 @@ class Crawler(object):
         else:
             postDetailInfoDict['postImgUrlList'] = u''.encode("utf8")
 
+        #########################################
+        # AuthorComment和AuthorCommentNum没有配出来
         if postDetailInfoDict['postCommentNum'] >= 1:
             #commentUserNameList = re.findall(r'<a href="https://www\.douban\.com/people/135813880/" class="">(.*)</a>', str(postComment))
             commentUserNameTagList = postComment.find_all('a', attrs={"href":postDetailInfoDict['postAuthorUrl'], 'class':''})
-            print len(commentUserNameTagList)
+            #print len(commentUserNameTagList)
             commentUserNameList = commentUserNameTagList#map(lambda tag: tag.a, commentUserNameTagList)
             commentContentList = re.findall('<p class="">(.*)</p>', str(postContent))
             userNameAndCommentContentList = map(lambda name, comment: (name, comment), commentUserNameList, commentContentList)
@@ -354,13 +356,11 @@ class Crawler(object):
 
 
         logging.info("postDetailInfoDict['postContent']:{0}".format(postDetailInfoDict['postContent']))
-        #logging.info("len(postDetailInfoDict['postContent']):{0}".format(len(postDetailInfoDict['postContent'])))
 
         logging.info("postDetailInfoDict['postImgNum']:{0}".format(postDetailInfoDict['postImgNum']))
         logging.info("postImgUrlList:{0}".format(postImgUrlList))
         logging.info("postDetailInfoDict['postImgUrlList']:{0}".format(postDetailInfoDict['postImgUrlList']))
 
-        #logging.info("str(postContent):{0}".format(str(postComment)))
         logging.info("commentUserNameList:{0}".format(commentUserNameList))
         logging.info("len(commentUserNameList):{0}".format(len(commentUserNameList)))
         logging.info("commentContentList:{0}".format(commentContentList))
