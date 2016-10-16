@@ -10,7 +10,7 @@
 ##### 小组基本信息
 
 |字段名|类型|含义|举例|  
-|-|:--:|-|-|    
+|:-:|：--：|：-:|:-:|    
 |GROUP_SOURCE|VARCHAR(10)|数据来源|"douban"或"tieba"|  
 |GROUP_QUERY|VARCHAR(20)|查询query(类似GROUP_TAG)|"北京,IT"|  
 |GROUP_NAME|VARCHAR(30)|组名、吧名|"北京读书交友会"|  
