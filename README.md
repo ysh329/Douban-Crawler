@@ -8,17 +8,18 @@
 注备：豆瓣小组、贴吧
 
 ##### 小组基本信息
-|字段名|类型|含义|举例|  
-|-|:-:|::|:|    
-|GROUP_SOURCE|VARCHAR(10)|数据来源|"douban"或"tieba"|  
-|GROUP_QUERY|VARCHAR(20)|查询query(类似GROUP_TAG)|"北京,IT"|  
-|GROUP_NAME|VARCHAR(30)|组名、吧名|"北京读书交友会"|  
-|GROUP_ID|VARCHAR(20)|全站唯一性ID|"576850"|  
-|GROUP_MEMBER_NUM|INT|小组人数|300|  
-|GROUP_URL|TEXT|地址|"https://www.douban.com/group/10274/"|    
-|GROUP_INTRO|TEXT|介绍|"小组介绍内容"|  
-|GROUP_CREATE_DATE|VARCHAR(10)|小组创建时间|2010-10-10|  
-|GROUP_TAG|VARCHAR(20)|小组标签|"北京,读书,交友"|  
+
+|字段名|类型|含义|举例|
+|:---:|：---：|：---:|::---:|
+|GROUP_SOURCE|VARCHAR(10)|数据来源|"douban"或"tieba"|
+|GROUP_QUERY|VARCHAR(20)|查询query(类似GROUP_TAG)|"北京,IT"|
+|GROUP_NAME|VARCHAR(30)|组名、吧名|"北京读书交友会"|
+|GROUP_ID|VARCHAR(20)|全站唯一性ID|"576850"|
+|GROUP_MEMBER_NUM|INT|小组人数|300|
+|GROUP_URL|TEXT|地址|"https://www.douban.com/group/10274/"|
+|GROUP_INTRO|TEXT|介绍|"小组介绍内容"|
+|GROUP_CREATE_DATE|VARCHAR(10)|小组创建时间|2010-10-10|
+|GROUP_TAG|VARCHAR(20)|小组标签|"北京,读书,交友"|
 
 ##### 活跃度基本信息(每天字段更新)  
 |字段名|类型|含义|举例|  
